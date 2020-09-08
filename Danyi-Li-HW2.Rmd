@@ -1,0 +1,203 @@
+---
+title: "HW2-AD"
+author: "Danyi Li"
+date: "8/29/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+## Importing class one survey data
+
+```{r}
+ getwd()
+ setwd("C:\\4 2020 Fall Advanced Data Analysis\\ADA-FAll-2020-master\\Class One")
+  C1survey <- read.csv("Class 1 Survey Fall 2020.csv")
+ 
+```
+ 
+
+## 2. Determine: a. the number of observations (i.e. the number of people who filled out the survey) and b. the number of variables in the dataframe.
+```{r}
+dim(C1survey)
+#[1] 32  27
+# The command gives the number of rows (observations) and columns (variables.
+# There are 32 observations and 27 variables.
+
+```
+
+## 3. a. Rename the column variables to something shorter and that is descriptive of what the variable is about (for example like_dogs for the ‘Do you like dogs?’ question variable) and b. Display that they are renamed.
+```{r}
+  varlist<-colnames(C1survey)
+  varlist
+  # I started from "do you like cats"
+  
+  names(C1survey)[2:27]<-c("LikeCats", "LikeDogs", "OneThing", "Slogan", "WeekDays", "Sleep", "Food", "Drink", "Season", "Month", "Hobby", "Degree", "Specialization", "Software", "R", "Coding", "HowLong", "ThreeThings", "MajorArea", "Number", "Birthday", "BirthMonth", "Country", "State", "City", "Education") 
+  #renames variables in order of appearance
+  
+  colnames(C1survey) 
+
+  
+```
+
+## 4. Write code to determine and display the number of factor, integer, numerical, and character variables there are in the C1survey dataset.
+```{r}
+
+summary(C1survey)
+str(C1survey)
+
+
+```
+
+##5. a. Using code, check the bday and bmonth variables for any unusual or missing values. If you find any, b. describe what you will do with the unusual values in a comment before or immediately following the code that does it, and c. after you have cleaned up any unusual values, find the median bday and month. *Note: please make sure that your bday and month variables are numeric before doing statistics
+```{r}
+attach(C1survey)
+## I don't have to use $ for every variable!
+
+Birthday
+
+# From the outputs, I detected one value in Birthday is unusual "26-Mar"
+# I could change th value based on the information, but this is a really small dataset. Maybe in most cases, it is impossible for me to correct all of the unusual values, so I will just treat it as a missing data.
+
+Birthday <- as.numeric(Birthday)
+# Change the character variable to a numeric one, missing data generated.
+Birthday
+# The one missing value was coded as "NA", and will be automatically ignored when perform statistics.
+
+
+BirthMonth
+
+# There are too many missing values in this variable, and there are rules to follow when re-code this variable, so I changed the unusual values.
+
+BirthMonth[BirthMonth == "december"] <- "12"
+BirthMonth[BirthMonth == "August"] <- "8"
+BirthMonth[BirthMonth == "March"] <- "3"
+
+BirthMonth
+BirthMonth <- as.numeric(BirthMonth)
+
+## find the median bday and month
+
+median(Birthday, na.rm=TRUE)
+# 17 is the median
+median(BirthMonth, na.rm=TRUE)
+# 8 is the median
+
+```
+
+##6. a. Create a new variable called bseason that gives the season according to Northern Meteorological season in which respondents were born (winter=12/1 to 2/29, spring=3/1 to 5/31, summer=6/1 to 8/31, fall=9/1 to 11/30). b. Using the table function, print a table of Seasons in the columns and bmonths in the rows that allows you to check that the coding is correct c. Sum the columns using the addmargins function to answer the question of how many classmates were born in each season? Include your answer in the code you turn in.
+
+```{r}
+
+# to create a variable containing month and date information
+
+# allow leading zeros in bday
+
+bday <- formatC(Birthday, width = 2, format = "d", flag = "0")
+
+Birthday_c <- as.character(bday)
+Birthday_c
+
+BirthMonth_c <- as.character(BirthMonth)
+
+bseason1 <- paste(BirthMonth_c, Birthday_c, sep = "", collapse = NULL)
+bseason1
+
+bseason1 <- as.numeric(bseason1)
+bseason1
+
+## To generate four seasons and lable them
+##(winter=12/1 to 2/29, spring=3/1 to 5/31, summer=6/1 to 8/31, fall=9/1 to 11/30)
+
+bseason <- "NA"
+  
+# winter: x >= 1201 | x<= 229; 
+bseason[bseason1 >= 1201 | bseason1 <= 229] <- 0
+# spring: 301 <= x <= 531
+bseason[bseason1 > 300 & bseason1 < 532] <- 1
+# summer: 
+bseason[bseason1 > 600 & bseason1 < 830] <- 2
+# fall:
+bseason[bseason1 > 900 & bseason1 < 1131] <- 3
+
+
+bseason_f <- factor(bseason, levels=c (0,1,2,3), labels = c("winter", "spring", "summer", "fall")) 
+
+table(bseason_f)
+##  winter spring summer   fall 
+##    6      6      9      10 
+## Expect the one missing data, there are 6 people born in winter, 6 in spring, 9 in summer and 10 in fall.
+
+```
+
+##7. Pick your favorite variable to analyze, come up with a question you want to answer with that variable, generate the code, and provide an answer to your question. Describe what you did using comments (i.e. #’s).
+
+```{r}
+
+# I chose the variable "do you like cats?" and intended to detect whether born season can predict the person like cats or not. 
+# Because I have "dummy" variable bseason, in which reference group is the group of people born in winter.
+# And I will code the dependent variable as "like" cats or "dislike or not sure" about cats. A logistic regression in which dependent variable is binary may anwer my question.
+
+# My hypothesis H0 is that "compared with people born in winter, people born in other three seasons are more likely to like cats."
+
+install.packages("aod", dependencies = T)
+library(aod)
+library(ggplot2)
+
+# dependent variable
+Cat <- "NA"
+Cat[LikeCats=="Yes"] <-1
+Cat[LikeCats=="No" | LikeCats=="Ambivalent"] <-0
+Cat <- as.numeric(Cat)
+hist(Cat)
+
+## IV
+summary("bseason_f")
+
+
+# 
+xtabs(~Cat + bseason_f)
+## Cat winter spring summer fall
+#  0      4      3      4    2
+#  1      2      3      5    8
+
+mylogit <- glm(Cat ~ bseason_f, family = "binomial")
+
+summary(mylogit)
+
+## From the output, non of the three groups harvested statistically significant connection withe the outcome variable, which means that compared with people born in winter, people born in spring, summer and fall did not more likely to like cats. The research hypothsis H0 is not supported.
+
+```
+
+
+
+
+
+
+
+
+
+
+
